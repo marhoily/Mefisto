@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using JetBrains.Annotations;
 
 namespace Mefisto.Fb2
 {
 	public class BookReader
 	{
-		[NotNull] private readonly IFb2Reader _reader;
+		[NotNull]
+		private readonly IFb2Reader _reader;
 
 		public BookReader([NotNull] IFb2Reader reader)
 		{
@@ -19,17 +19,15 @@ namespace Mefisto.Fb2
 		{
 			var result = new Book();
 
-			var schema = new SchemaBuilder()
-				.AddRead(C.Mandatory, "FictionBook")
-				.AddRead(C.Mandatory, "description")
-				.AddRead(C.Mandatory, "title-info")
-				.AddRead(C.MandatoryString, "genre", v => result.Genre = v);
+			var schema = new SchemaBuilder(_reader)
+				.AddRead("FictionBook")
+				.AddRead("description")
+				.AddRead("title-info")
+				.AddRead<string>("genre", v => result.Genre = v);
 
-			foreach (var func in schema.Build())
-			{
-				Debug.Assert(func != null, "func != null");
-				if (!func()) break;
-			}
+			foreach (var step in schema.Build())
+				if (!step.Value()) 
+					break;
 
 			return result;
 		}
@@ -39,27 +37,63 @@ namespace Mefisto.Fb2
 	{
 	}
 
+	public struct NotNull<T> where T : class
+	{
+		[NotNull]
+		public T Value { get; private set; }
+
+		public NotNull([NotNull] T value)
+			: this()
+		{
+			Value = value;
+		}
+
+		public static implicit operator NotNull<T>([NotNull] T value)
+		{
+			return new NotNull<T>(value);
+		}
+	}
+
 	public class SchemaBuilder
 	{
 		[NotNull]
-		public SchemaBuilder AddRead<T>([NotNull] ISettings<T> settings, [NotNull] string name, [CanBeNull] Action<T> setter = null)
+		private readonly IFb2Reader _reader;
+		[NotNull]
+		private readonly List<NotNull<Func<bool>>> _readers;
+
+		public SchemaBuilder([NotNull] IFb2Reader reader)
 		{
-			throw new NotImplementedException();
-			//return this;
+			_reader = reader;
+			_readers = new List<NotNull<Func<bool>>>();
 		}
 
 		[NotNull]
-		public IEnumerable<Func<bool>> Build()
+		public SchemaBuilder AddRead([NotNull] string name)
 		{
-			throw new NotImplementedException();
+			_readers.Add(new NotNull<Func<bool>>(() => _reader.ReadElement(name)));
+			return this;
+		}
+		[NotNull]
+		public SchemaBuilder AddRead<T>([NotNull] string name, [NotNull] Action<T> setter)
+		{
+			_readers.Add(new NotNull<Func<bool>>(() => _reader.Read(name, setter)));
+			return this;
+		}
+
+		[NotNull]
+		public IEnumerable<NotNull<Func<bool>>> Build()
+		{
+			return _readers;
 		}
 	}
 
 
 	public static class C
 	{
-		[NotNull] public static readonly Mandatory<Unit> Mandatory = new Mandatory<Unit>();
-		[NotNull] public static readonly Mandatory<string> MandatoryString = new Mandatory<string>();
+		[NotNull]
+		public static readonly Mandatory<Unit> Mandatory = new Mandatory<Unit>();
+		[NotNull]
+		public static readonly Mandatory<string> MandatoryString = new Mandatory<string>();
 		public static ISettings<Unit> Optional { get; set; }
 
 		public static ISettings<T> Bind<T>(Action<T> action)

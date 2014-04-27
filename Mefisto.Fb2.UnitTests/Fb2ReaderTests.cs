@@ -11,6 +11,7 @@ namespace Mefisto.Fb2.UnitTests
 	{
 		[NotNull] private readonly TestLogger _testLogger;
 		[NotNull] private readonly Action<string> _setter;
+		public static readonly XNamespace Nsp = "nsp";
 
 		public Fb2ReaderTests()
 		{
@@ -27,25 +28,25 @@ namespace Mefisto.Fb2.UnitTests
 		public void Read_Should_Return_True()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
-				new XElement(Xmlns.Fb2 + "book").CreateReader());
-			bookReader.ReadElement("book").Should().BeTrue();
+				new XElement(Nsp + "book").CreateReader());
+			bookReader.ReadElement(Nsp + "book").Should().BeTrue();
 		}
 
 		[Fact]
 		public void Read_Should_Allow_Tag_To_Be_Case_Insensitive()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
-				new XElement(Xmlns.Fb2 + "Book").CreateReader());
-			bookReader.ReadElement("book").Should().BeTrue();
+				new XElement(Nsp + "Book").CreateReader());
+			bookReader.ReadElement(Nsp + "book").Should().BeTrue();
 		}
 		[Fact]
 		public void Read_When_Incorrect_Namespace_Should_Log_So_And_Return_False()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
 				new XElement("book").CreateReader());
-			bookReader.ReadElement("book").Should().BeFalse();
+			bookReader.ReadElement(Nsp + "book").Should().BeFalse();
 			_testLogger.DequeueMessages().Should().Equal(
-				"[Error] Expected <book xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\">, " +
+				"[Error] Expected <book xmlns=\"nsp\">, " +
 				"but found: <book xmlns=\"\">");
 		}
 
@@ -53,39 +54,39 @@ namespace Mefisto.Fb2.UnitTests
 		public void Read_When_Incorrect_Tag_Should_Log_So_And_Return_False()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
-				new XElement(Xmlns.Fb2 + "wrong").CreateReader());
-			bookReader.ReadElement("book").Should().BeFalse();
+				new XElement(Nsp + "wrong").CreateReader());
+			bookReader.ReadElement(Nsp + "book").Should().BeFalse();
 			_testLogger.DequeueMessages().Should().Equal(
-				"[Error] Expected <book xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\">, " +
-				"but found: <wrong xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\">");
+				"[Error] Expected <book xmlns=\"nsp\">, " +
+				"but found: <wrong xmlns=\"nsp\">");
 		}
 
 		[Fact]
 		public void Read_Should_Read_Inner_Tag()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
-				new XElement(Xmlns.Fb2 + "book",
-					new XElement(Xmlns.Fb2 + "genre", "sf_fantasy"))
+				new XElement(Nsp + "book",
+					new XElement(Nsp + "genre", "sf_fantasy"))
 						.CreateReader());
 
-			bookReader.ReadElement("book").Should().BeTrue();
-			bookReader.ReadElement("genre").Should().BeTrue();
+			bookReader.ReadElement(Nsp + "book").Should().BeTrue();
+			bookReader.ReadElement(Nsp + "genre").Should().BeTrue();
 		}
 		[Fact]
 		public void Read_When_TextElement_Should_Return_Text()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
-				new XElement(Xmlns.Fb2 + "genre", "sf_fantasy")
+				new XElement(Nsp + "genre", "sf_fantasy")
 					.CreateReader());
 
-			bookReader.Read("genre", _setter).Should().BeTrue();
+			bookReader.Read(Nsp + "genre", _setter).Should().BeTrue();
 			A.CallTo(() => _setter("sf_fantasy")).MustHaveHappened();
 		}
 		[Fact]
 		public void Read_String_When_Wrong_Tag_Name_Should_Return_False()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
-				new XElement(Xmlns.Fb2 + "blah", "sf_fantasy")
+				new XElement(Nsp + "blah", "sf_fantasy")
 					.CreateReader());
 
 			bookReader.Read<string>("genre").Should().BeFalse();

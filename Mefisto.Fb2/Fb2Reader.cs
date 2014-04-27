@@ -1,12 +1,13 @@
 using System;
 using System.Xml;
+using System.Xml.Linq;
 using JetBrains.Annotations;
 
 namespace Mefisto.Fb2
 {
 	public class Fb2Reader : IFb2Reader
 	{
-		private const string Fb2 = "http://www.gribuser.ru/xml/fictionbook/2.0";
+		//private const string Fb2 = "http://www.gribuser.ru/xml/fictionbook/2.0";
 		[NotNull] private readonly ILogger _logger;
 		[NotNull] private readonly XmlReader _reader;
 
@@ -16,32 +17,32 @@ namespace Mefisto.Fb2
 			_reader = reader;
 		}
 
-		public bool ReadElement(string name)
+		public bool ReadElement(XName name)
 		{
 			return ReadAndVerifyName(name);
 		}
 
-		private bool ReadAndVerifyName([NotNull] string name)
+		private bool ReadAndVerifyName([NotNull] XName name)
 		{
 			_reader.Read();
-			if (CorrectName(name) && CorrectNamespace()) return true;
+			if (CorrectName(name) && CorrectNamespace(name)) return true;
 			_logger.Error(string.Format(
 				"Expected <{1} xmlns=\"{2}\">, but found: <{0} xmlns=\"{3}\">",
-				_reader.Name, name, Fb2, _reader.NamespaceURI));
+				_reader.Name, name.LocalName, name.NamespaceName, _reader.NamespaceURI));
 			return false;
 		}
 
-		private bool CorrectNamespace()
+		private bool CorrectNamespace([NotNull] XName name)
 		{
-			return _reader.NamespaceURI == Fb2;
+			return _reader.NamespaceURI == name.NamespaceName;
 		}
 
-		private bool CorrectName([NotNull] string name)
+		private bool CorrectName([NotNull] XName name)
 		{
-			return string.Compare(_reader.Name, name, StringComparison.OrdinalIgnoreCase) == 0;
+			return string.Compare(_reader.Name, name.LocalName, StringComparison.OrdinalIgnoreCase) == 0;
 		}
 
-		public bool Read<T>(string name, Action<T> setter = null)
+		public bool Read<T>(XName name, Action<T> setter = null)
 		{
 			if (!ReadAndVerifyName(name)) 
 				return false;

@@ -26,8 +26,12 @@ namespace Mefisto.Fb2.UnitTests
 				yield return Messages.Dequeue();
 		}
 
+
 		public void Error(string format, params object[] arguments)
 		{
+			if (arguments.Length == 0)
+				Messages.Enqueue(string.Format("[Error] {0}", format));
+			else
 			Messages.Enqueue(string.Format("[Error] {0}",
 				string.Format(format, arguments)));
 		}
