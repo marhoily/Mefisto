@@ -31,6 +31,13 @@ namespace Mefisto.Fb2.UnitTests
 		}
 
 		[Fact]
+		public void Read_Should_Allow_Tag_To_Be_Case_Insensitive()
+		{
+			_bookReader.Read(
+				new XElement(Xmlns.Fb2 + "Fictionbook").CreateReader());
+		}
+
+		[Fact]
 		public void Read_When_Incorrect_Namespace_Should_Log_So_And_Return_Null()
 		{
 			var book = _bookReader.Read(

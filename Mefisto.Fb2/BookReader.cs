@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System;
+using System.Xml;
 using Mefisto.Fb2.Annotations.JetBrains.Annotations;
 
 namespace Mefisto.Fb2
@@ -6,7 +7,8 @@ namespace Mefisto.Fb2
 	public class BookReader
 	{
 		private const string Fb2 = "http://www.gribuser.ru/xml/fictionbook/2.0";
-		[NotNull] private readonly ILogger _logger;
+		[NotNull]
+		private readonly ILogger _logger;
 
 		public BookReader([NotNull] ILogger logger)
 		{
@@ -17,7 +19,7 @@ namespace Mefisto.Fb2
 		public Book Read([NotNull] XmlReader reader)
 		{
 			reader.Read();
-			if (reader.Name != "FictionBook")
+			if (string.Compare(reader.Name, "FictionBook", StringComparison.OrdinalIgnoreCase) != 0)
 			{
 				_logger.Error(string.Format(
 					"Expected FictionBook, but found: '{0}'", reader.Name));
