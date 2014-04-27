@@ -41,14 +41,20 @@ namespace Mefisto.Fb2
 			return string.Compare(_reader.Name, name, StringComparison.OrdinalIgnoreCase) == 0;
 		}
 
-		public T Read<T>([NotNull] string name)
+		public bool Read<T>(string name, Action<T> setter = null)
 		{
-			if (!ReadAndVerifyName(name)) return default(T);
-			_reader.Read();
-			if (_reader.NodeType != XmlNodeType.Text)
-				return default(T);
+			if (!ReadAndVerifyName(name)) 
+				return false;
 
-			return (T)(object)_reader.Value;
+			_reader.Read();
+
+			if (_reader.NodeType != XmlNodeType.Text)
+				return false;
+
+			if (setter != null) 
+				setter((T)(object)_reader.Value);
+
+			return true;
 		}
 	}
 }

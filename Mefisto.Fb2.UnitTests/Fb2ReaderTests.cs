@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Xml.Linq;
+using FakeItEasy;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Xunit;
@@ -9,10 +10,12 @@ namespace Mefisto.Fb2.UnitTests
 	public class Fb2ReaderTests : IDisposable
 	{
 		[NotNull] private readonly TestLogger _testLogger;
+		[NotNull] private readonly Action<string> _setter;
 
 		public Fb2ReaderTests()
 		{
 			_testLogger = new TestLogger();
+			_setter = A.Fake<Action<string>>();
 		}
 
 		public void Dispose()
@@ -75,18 +78,22 @@ namespace Mefisto.Fb2.UnitTests
 				new XElement(Xmlns.Fb2 + "genre", "sf_fantasy")
 					.CreateReader());
 
-			bookReader.Read<string>("genre").Should().Be("sf_fantasy");
+			bookReader.Read("genre", _setter).Should().BeTrue();
+			A.CallTo(() => _setter("sf_fantasy")).MustHaveHappened();
 		}
 		[Fact]
-		public void Read_String_When_Wrong_Tag_Name_Should_Return_Default()
+		public void Read_String_When_Wrong_Tag_Name_Should_Return_False()
 		{
 			var bookReader = new Fb2Reader(_testLogger,
 				new XElement(Xmlns.Fb2 + "blah", "sf_fantasy")
 					.CreateReader());
 
-			bookReader.Read<string>("genre").Should().Be(null);
+			bookReader.Read<string>("genre").Should().BeFalse();
 
 			_testLogger.DequeueMessages().Should().NotBeEmpty();
+			A.CallTo(() => _setter(""))
+				.WithAnyArguments()
+				.MustNotHaveHappened();
 		}
 	}
 }
