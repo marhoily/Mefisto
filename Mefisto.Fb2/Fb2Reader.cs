@@ -19,17 +19,17 @@ namespace Mefisto.Fb2
 		public bool ReadElement(string name)
 		{
 			_reader.Read();
-			if (string.Compare(_reader.Name, "FictionBook", StringComparison.OrdinalIgnoreCase) != 0)
+			if (string.Compare(_reader.Name, name, StringComparison.OrdinalIgnoreCase) != 0)
 			{
 				_logger.Error(string.Format(
-					"Expected FictionBook, but found: '{0}'", _reader.Name));
+					"Expected {1}, but found: '{0}'", _reader.Name, name));
 				return false;
 			}
 			if (_reader.NamespaceURI != Fb2)
 			{
 				_logger.Error(string.Format(
-					"Expected {{{{{0}}}}}:FictionBook, and the tag was allright but " +
-					"found different namespace: '{1}'", Fb2, _reader.NamespaceURI));
+					"Expected {{{{{0}}}}}:{2}, and the tag was allright but " +
+					"found different namespace: '{1}'", Fb2, _reader.NamespaceURI, name));
 				return false;
 			}
 			return true;
