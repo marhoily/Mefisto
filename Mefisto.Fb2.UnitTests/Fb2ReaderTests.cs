@@ -42,8 +42,8 @@ namespace Mefisto.Fb2.UnitTests
 				new XElement("book").CreateReader());
 			bookReader.ReadElement("book").Should().BeFalse();
 			_testLogger.DequeueMessages().Should().Equal(
-				"[Error] Expected {http://www.gribuser.ru/xml/fictionbook/2.0}:book, " +
-				"and the tag was allright but found different namespace: ''");
+				"[Error] Expected <book xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\">, " +
+				"but found: <book xmlns=\"\">");
 		}
 
 		[Fact]
@@ -53,7 +53,8 @@ namespace Mefisto.Fb2.UnitTests
 				new XElement(Xmlns.Fb2 + "wrong").CreateReader());
 			bookReader.ReadElement("book").Should().BeFalse();
 			_testLogger.DequeueMessages().Should().Equal(
-				"[Error] Expected book, but found: 'wrong'");
+				"[Error] Expected <book xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\">, " +
+				"but found: <wrong xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\">");
 		}
 
 		[Fact]
