@@ -16,10 +16,12 @@ namespace Mefisto.Fb2.UnitTests
 		[NotNull] private readonly XmlReader _xmlReader;
 		[NotNull] private readonly Action<XmlReader> _a;
 		[NotNull] private readonly Action<XmlReader> _b;
-		private TestLogger _testLogger = new TestLogger();
+		[NotNull] private readonly TestLogger _testLogger;
 
 		public AssociativeReaderTests()
 		{
+			_testLogger = new TestLogger();
+
 			_xmlReader = new XElement("R",
 				new XElement("B",
 					new XElement("D")),
@@ -172,8 +174,7 @@ namespace Mefisto.Fb2.UnitTests
 						_virtualScopeCounter++;
 					continue;
 				}
-				XNamespace nsp = _reader.NamespaceURI;
-				var name = nsp + _reader.Name;
+				var name = _reader.GetName();
 				if (_scopeHandler == null)
 				{
 					Debug.Assert(name == _rootScopeHandler.Name);
@@ -199,6 +200,16 @@ namespace Mefisto.Fb2.UnitTests
 					scopeHandler.Handler(_reader);
 				}
 			}
+		}
+	}
+
+	public static class XmlReaderExtensions
+	{
+		[NotNull]
+		public static XName GetName([NotNull] this XmlReader xmlReader)
+		{
+			XNamespace nsp = xmlReader.NamespaceURI;
+			return nsp + xmlReader.Name;
 		}
 	}
 }
