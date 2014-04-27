@@ -68,5 +68,25 @@ namespace Mefisto.Fb2.UnitTests
 			bookReader.ReadElement("book").Should().BeTrue();
 			bookReader.ReadElement("genre").Should().BeTrue();
 		}
+		[Fact]
+		public void Read_When_TextElement_Should_Return_Text()
+		{
+			var bookReader = new Fb2Reader(_testLogger,
+				new XElement(Xmlns.Fb2 + "genre", "sf_fantasy")
+					.CreateReader());
+
+			bookReader.Read<string>("genre").Should().Be("sf_fantasy");
+		}
+		[Fact]
+		public void Read_String_When_Wrong_Tag_Name_Should_Return_Default()
+		{
+			var bookReader = new Fb2Reader(_testLogger,
+				new XElement(Xmlns.Fb2 + "blah", "sf_fantasy")
+					.CreateReader());
+
+			bookReader.Read<string>("genre").Should().Be(null);
+
+			_testLogger.DequeueMessages().Should().NotBeEmpty();
+		}
 	}
 }

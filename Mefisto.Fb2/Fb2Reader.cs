@@ -18,6 +18,11 @@ namespace Mefisto.Fb2
 
 		public bool ReadElement(string name)
 		{
+			return ReadAndVerifyName(name);
+		}
+
+		private bool ReadAndVerifyName([NotNull] string name)
+		{
 			_reader.Read();
 			if (CorrectName(name) && CorrectNamespace()) return true;
 			_logger.Error(string.Format(
@@ -34,6 +39,16 @@ namespace Mefisto.Fb2
 		private bool CorrectName([NotNull] string name)
 		{
 			return string.Compare(_reader.Name, name, StringComparison.OrdinalIgnoreCase) == 0;
+		}
+
+		public T Read<T>([NotNull] string name)
+		{
+			if (!ReadAndVerifyName(name)) return default(T);
+			_reader.Read();
+			if (_reader.NodeType != XmlNodeType.Text)
+				return default(T);
+
+			return (T)(object)_reader.Value;
 		}
 	}
 }
