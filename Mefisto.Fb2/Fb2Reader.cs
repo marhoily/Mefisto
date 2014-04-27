@@ -26,6 +26,11 @@ namespace Mefisto.Fb2
 		{
 			_reader.Read();
 			if (CorrectName(name) && CorrectNamespace(name)) return true;
+			if (name.NamespaceName == "" && _reader.NamespaceURI == "")
+				_logger.Error(string.Format(
+					"Expected <{1}>, but found: <{0}>",
+					_reader.Name, name.LocalName));
+			else
 			_logger.Error(string.Format(
 				"Expected <{1} xmlns=\"{2}\">, but found: <{0} xmlns=\"{3}\">",
 				_reader.Name, name.LocalName, name.NamespaceName, _reader.NamespaceURI));
