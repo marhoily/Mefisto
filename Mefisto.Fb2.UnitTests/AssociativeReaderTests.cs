@@ -65,7 +65,8 @@ namespace Mefisto.Fb2.UnitTests
 
 			reader.Scan();
 
-			_testLogger.DequeueMessages().Should().Equal("x");
+			_testLogger.DequeueMessages().Should()
+				.Equal("[Error] Mandatory handler is not found: D");
 		}
 	}
 
@@ -95,23 +96,38 @@ namespace Mefisto.Fb2.UnitTests
 		}
 	}
 
-	public class Scope
+	public class Scope 
 	{
 		[NotNull]
 		public ScopeHandler Handler { get; private set; }
-
 		[NotNull]
 		public Scope ParentScope { get; private set; }
 
+		private readonly HashSet<XName> _mandatoryHandlers;
 		public Scope([NotNull] ScopeHandler handler)
 		{
 			Handler = handler;
+			_mandatoryHandlers = new HashSet<XName>(handler.SubDescriptors
+				.Values.Where(s => s.Mandatory).Select(s => s.Name));
 		}
 
 		public Scope([NotNull] Scope parentScope, [NotNull] ScopeHandler handler)
 			: this(handler)
 		{
 			ParentScope = parentScope;
+		}
+
+		public void Visit([NotNull] XName name)
+		{
+			_mandatoryHandlers.Remove(name);
+		}
+
+		public void ReportUnvisitedMandatoryHandlers([NotNull] ILogger logger)
+		{
+			foreach (var name in _mandatoryHandlers)
+			{
+				logger.Error("Mandatory handler is not found: " + name);
+			}
 		}
 	}
 
@@ -146,6 +162,7 @@ namespace Mefisto.Fb2.UnitTests
 						continue;
 					}
 					_scopeHandler = _currentScope.Handler;
+					_currentScope.ReportUnvisitedMandatoryHandlers(_testLogger);
 					_currentScope = _currentScope.ParentScope;
 					continue;
 				}
@@ -171,6 +188,7 @@ namespace Mefisto.Fb2.UnitTests
 						_virtualScopeCounter++;
 					continue;
 				}
+				_currentScope.Visit(name);
 				if (!_reader.IsEmptyElement)
 				{
 					_currentScope = new Scope(_currentScope, _scopeHandler);
