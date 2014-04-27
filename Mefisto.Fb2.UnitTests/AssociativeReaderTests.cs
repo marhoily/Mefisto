@@ -20,8 +20,9 @@ namespace Mefisto.Fb2.UnitTests
 		public AssociativeReaderTests()
 		{
 			_xmlReader = new XElement("R",
+				new XElement("B",
+					new XElement("D")),
 				new XElement("A"),
-				new XElement("B"),
 				new XElement("C")
 				).CreateReader();
 
@@ -69,12 +70,28 @@ namespace Mefisto.Fb2.UnitTests
 		}
 	}
 
+	public class Scope
+	{
+		public ScopeHandler Handler { get; set; }
+		public Scope ParentScope { get; set; }
+
+		public Scope(ScopeHandler handler )
+		{
+			Handler = handler;
+		}
+
+		public Scope(Scope parentScope, ScopeHandler handler)
+			: this(handler)
+		{
+			ParentScope = parentScope;
+		}
+	}
 	public class AssociativeReader
 	{
 		private readonly ILogger _testLogger;
 		private readonly XmlReader _reader;
 		private ScopeHandler _scopeHandler;
-
+		private Scope _currentScope;
 		public AssociativeReader(
 			[NotNull] ILogger testLogger,
 			[NotNull] XmlReader reader,
@@ -83,6 +100,7 @@ namespace Mefisto.Fb2.UnitTests
 			_testLogger = testLogger;
 			_reader = reader;
 			_scopeHandler = scopeHandler;
+			_currentScope = new Scope(scopeHandler);
 		}
 
 
@@ -90,12 +108,19 @@ namespace Mefisto.Fb2.UnitTests
 		{
 			while (_reader.Read())
 			{
+				if (_reader.NodeType == XmlNodeType.EndElement)
+				{
+					_scopeHandler = _currentScope.Handler;
+					_currentScope = _currentScope.ParentScope;
+					continue;
+				}
 				XNamespace nsp = _reader.NamespaceURI;
 				var name = nsp + _reader.Name;
 				ScopeHandler scopeHandler;
 				if (!_scopeHandler.SubDescriptors.TryGetValue(name, out scopeHandler)) continue;
 				if (!_reader.IsEmptyElement)
 				{
+					_currentScope = new Scope(_currentScope, _scopeHandler);
 					_scopeHandler = scopeHandler;
 				}
 				if (scopeHandler.Handler != null)
