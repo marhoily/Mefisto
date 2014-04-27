@@ -1,61 +1,34 @@
-﻿using System;
-using System.Xml.Linq;
+﻿using FakeItEasy;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Xunit;
 
 namespace Mefisto.Fb2.UnitTests
 {
-	public class BookReaderTests : IDisposable
+	public class BookReaderTests
 	{
 		[NotNull] private readonly BookReader _bookReader;
-		[NotNull] private readonly TestLogger _testLogger;
+		[NotNull] private readonly IFb2Reader _fb2Reader;
 
 		public BookReaderTests()
 		{
-			_testLogger = new TestLogger();
-			_bookReader = new BookReader(_testLogger);
+			_fb2Reader = A.Fake<IFb2Reader>();
+			A.CallTo(() => _fb2Reader.ReadElement("FictionBook")).Returns(true);
+			_bookReader = new BookReader(_fb2Reader);
 		}
 
-		public void Dispose()
-		{
-			_testLogger.Messages.Should().BeEmpty();
-		}
 
 		[Fact]
 		public void Read_Should_Return_Book()
 		{
-			var book = _bookReader.Read(
-				new XElement(Xmlns.Fb2 + "FictionBook").CreateReader());
-			book.Should().NotBeNull();
+			_bookReader.Read().Should().NotBeNull();
 		}
 
 		[Fact]
-		public void Read_Should_Allow_Tag_To_Be_Case_Insensitive()
+		public void Read_When_Incorrect_Tag_Should_Return_Null()
 		{
-			_bookReader.Read(
-				new XElement(Xmlns.Fb2 + "Fictionbook").CreateReader());
-		}
-
-		[Fact]
-		public void Read_When_Incorrect_Namespace_Should_Log_So_And_Return_Null()
-		{
-			var book = _bookReader.Read(
-				new XElement("FictionBook").CreateReader());
-			book.Should().BeNull();
-			_testLogger.DequeueMessages().Should().Equal(
-				"[Error] Expected {http://www.gribuser.ru/xml/fictionbook/2.0}:FictionBook, " +
-				"and the tag was allright but found different namespace: ''");
-		}
-
-		[Fact]
-		public void Read_When_Incorrect_Tag_Should_Log_So_And_Return_Null()
-		{
-			var book = _bookReader.Read(
-				new XElement(Xmlns.Fb2 + "wrong").CreateReader());
-			book.Should().BeNull();
-			_testLogger.DequeueMessages().Should().Equal(
-				"[Error] Expected FictionBook, but found: 'wrong'");
+			A.CallTo(() => _fb2Reader.ReadElement("FictionBook")).Returns(false);
+			_bookReader.Read().Should().BeNull();
 		}
 	}
 }
