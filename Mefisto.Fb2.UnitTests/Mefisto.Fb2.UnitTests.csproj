@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="BookReaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestLogger.cs" />
     <Compile Include="Xmlns.cs" />
   </ItemGroup>
   <ItemGroup>
