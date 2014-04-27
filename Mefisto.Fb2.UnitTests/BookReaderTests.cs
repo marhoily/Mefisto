@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 using FluentAssertions;
-using Mefisto.Fb2.Annotations.JetBrains.Annotations;
+using JetBrains.Annotations;
 using Xunit;
 
 namespace Mefisto.Fb2.UnitTests

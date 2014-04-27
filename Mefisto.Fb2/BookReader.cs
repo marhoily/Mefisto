@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Xml;
-using Mefisto.Fb2.Annotations.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Mefisto.Fb2
 {

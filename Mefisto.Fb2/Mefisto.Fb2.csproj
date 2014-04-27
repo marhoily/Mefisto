@@ -44,6 +44,8 @@
     <Compile Include="Annotations\All.cs" />
     <Compile Include="Book.cs" />
     <Compile Include="BookReader.cs" />
+    <Compile Include="Fb2Reader.cs" />
+    <Compile Include="IFb2Reader.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
