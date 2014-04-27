@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
 using FakeItEasy;
+using FakeItEasy.Core;
 using FluentAssertions;
 using JetBrains.Annotations;
 using Xunit;
@@ -12,31 +13,39 @@ namespace Mefisto.Fb2.UnitTests
 	
 	public class AssociativeReaderTests
 	{
-		[Fact]
-		public void T1()
+		[NotNull] private readonly XmlReader _xmlReader;
+		[NotNull] private readonly Action<XmlReader> _a;
+		[NotNull] private readonly Action<XmlReader> _b;
+		[NotNull] private readonly AssociativeReader _reader;
+
+		public AssociativeReaderTests()
 		{
-			var xmlReader = new XElement("R",
+			_xmlReader = new XElement("R",
 				new XElement("A"),
 				new XElement("B"),
-				new XElement("C" +
-				             "")
+				new XElement("C")
 				).CreateReader();
-			var reader = new AssociativeReader(new TestLogger(), xmlReader);
-			var a = A.Fake<Action<XmlReader>>();
-			var b = A.Fake<Action<XmlReader>>();
-			reader.Set("A", a);
-			reader.Set("B", b);
 
-			reader.Scan();
-			A.CallTo(() => a(xmlReader))
-				.Invokes(_ => xmlReader.Name.Should().Be("A"))
-				.MustHaveHappened();
-			A.CallTo(() => b(xmlReader))
-				.Invokes(_ => xmlReader.Name.Should().Be("B"))
-				.MustHaveHappened();
+			_a = A.Fake<Action<XmlReader>>();
+			_b = A.Fake<Action<XmlReader>>();
+
+			A.CallTo(() => _a(_xmlReader)).Invokes(() => _xmlReader.Name.Should().Be("A"));
+			A.CallTo(() => _b(_xmlReader)).Invokes(() => _xmlReader.Name.Should().Be("B"));
+			
+			_reader = new AssociativeReader(new TestLogger(), _xmlReader);
 		}
 
-		
+		[Fact]
+		public void Scan_Should_Fire_Associated_Callbacks()
+		{
+			_reader.Set("A", _a);
+			_reader.Set("B", _b);
+
+			_reader.Scan();
+
+			A.CallTo(() => _a(_xmlReader)).MustHaveHappened();
+			A.CallTo(() => _b(_xmlReader)).MustHaveHappened();
+		}
 	}
 
 	public class AssociativeReader
