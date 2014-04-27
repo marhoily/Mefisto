@@ -52,6 +52,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssociativeReaderTests.cs" />
     <Compile Include="BookReaderTests.cs" />
     <Compile Include="Fb2ReaderTests.cs" />
     <Compile Include="IntegrationTest_ReadingSchemes.cs" />

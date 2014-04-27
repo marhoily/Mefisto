@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using JetBrains.Annotations;
 
 namespace Mefisto.Fb2
@@ -84,6 +85,29 @@ namespace Mefisto.Fb2
 		public IEnumerable<NotNull<Func<bool>>> Build()
 		{
 			return _readers;
+		}
+
+		[NotNull]
+		public SchemaBuilder AddReadMany<T>([NotNull] XName name,
+			[NotNull] Func<T> createScope, [NotNull] Action<SchemeScopeBuilder> insideTheScope)
+		{
+			//_readers.Add(new NotNull<Func<bool>>(() => _reader.Read(name, setter)));
+			insideTheScope(new SchemeScopeBuilder(_reader));
+			return this;
+		}
+	}
+
+	public sealed class SchemeScopeBuilder : SchemaBuilder
+	{
+		public SchemeScopeBuilder([NotNull] IFb2Reader reader) 
+			: base(reader)
+		{
+		}
+
+		[NotNull]
+		public T GetParent<T>(int level = 0)
+		{
+			throw new NotImplementedException();
 		}
 	}
 
